@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t rushildayabme/react-test -f ./client/Dockerfile.dev ./client
+  # we only care about a single test suite to run
+
+scripts:
+  - docker run -e CI=true rushildayabme/react-test npm test
+
+after_success:
+  - docker build -t rushildayabme/multi-client ./client
+  - docker build -t rushildayabme/multi-server ./server
+  - docker build -t rushildayabme/multi-nginx ./nginx
+  - docker build -t rushildayabme/multi-worker ./worker
+  # log into docker-cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "DOCKER_ID" --password-stdin
+  - docker push rushildayabme/multi-client
+  - docker push rushildayabme/multi-server
+  - docker push rushildayabme/multi-nginx
+  - docker push rushildayabme/multi-worker
